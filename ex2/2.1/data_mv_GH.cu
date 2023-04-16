@@ -70,8 +70,10 @@ int main(void)
 
     delete [] b_h;
     delete [] a_h;
+    delete [] c_h;
     cudaFree(a_d);
     cudaFree(b_d);
+    cudaFree(c_d);
 
     return 0;
 }
