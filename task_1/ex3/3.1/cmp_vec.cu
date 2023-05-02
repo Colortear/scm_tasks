@@ -3,10 +3,7 @@
 #include <cassert>
 #include <iostream>
 #include <random>
-
-struct vecs {
-    float   *a, *b, *c;
-};
+#include <cstdio>
 
 __global__ void cmp_gpu(bool *ret, float *const a, float *const b, int N)
 {
@@ -20,6 +17,8 @@ __global__ void cmp_gpu(bool *ret, float *const a, float *const b, int N)
         if (a[i] != b[i])
             cmp = false;
     sdata[threadIdx.x] = cmp;
+    if (!cmp)
+        printf("yes\n");
     __syncthreads();
     for (unsigned int s = blockDim.x >> 1; s > 0; s >>= 1) {
         if (threadIdx.x <= s && sdata[threadIdx.x] && !sdata[threadIdx.x + s])
@@ -32,57 +31,56 @@ __global__ void cmp_gpu(bool *ret, float *const a, float *const b, int N)
 
 using namespace std;
 
-void    prepare_data(vecs &V, int N)
-{
-    int rand_idx;
+template <class T>
+class CUDA_vec {
+public:
 
-    cudaMallocManaged(&V.a, N * sizeof(float));
-    cudaMallocManaged(&V.b, N * sizeof(float));
-    cudaMallocManaged(&V.c, N * sizeof(float));
-    srand(time(0));
-    for (int i = 0; i < N; i++) {
-        V.a[i] = static_cast<float>(rand() % 100);
-        V.b[i] = V.a[i];
-        V.c[i] = V.a[i];
+    CUDA_vec() {};
+    CUDA_vec(const int N, T *init)
+    {
+        cudaMallocManaged(&this->v, N * sizeof(T));
+        for (int i = 0; i < N; i++)
+            this->v[i] = init[i];
     }
-    rand_idx = rand() % N;
-    V.c[rand_idx] = V.a[rand_idx] + 1;
-    cout << "V.c[rand_idx] = " << V.c[rand_idx] << endl;
-    cout << "V.a[rand_idx] = " << V.a[rand_idx] << endl;
-    cout << rand_idx << endl;
-}
+    ~CUDA_vec() { cudaFree(v); }
 
-void    compare_vec_gpu(float *x, float *y, int const nb, int const bs, int N, bool desired_res)
-{
-    static int  test_num = 0;
-    bool        *result;
+    bool    cmp(const CUDA_vec &rhs, int const nb, int const bs, int const N)
+    {
+        bool    *result;
+        bool    ret;
 
-    cudaMallocManaged(&result, sizeof(bool));
-    cmp_gpu<<<nb, bs>>>(result, x, y, N);
-    cudaDeviceSynchronize();
-    cout << cudaGetErrorName(cudaGetLastError()) << endl;
-    assert(*result == desired_res);
-    cout << "test " << ++test_num << " is ok." << endl;
-    cudaFree(result);
-}
+        cudaMallocManaged(&result, sizeof(bool));
+        cmp_gpu<<<nb, bs>>>(result, this->v, rhs.v, N);
+        cudaDeviceSynchronize();
+        cout << cudaGetErrorName(cudaGetLastError()) << endl;
+        ret = *result;
+        cudaFree(result);
+        return ret;
+    }
 
-void    free_vecs(vecs &V)
-{
-    cudaFree(V.a);
-    cudaFree(V.b);
-    cudaFree(V.c);
-}
+    T   *v;
+};
 
 int     main(void)
 {
-    int const   N = 1400;
-    int const   blockSize = 64;
-    int const   numBlocks = (N+blockSize-1)/blockSize;
-    vecs        V;
+    int const       N = 1400;
+    int const       blockSize = 64;
+    int const       numBlocks = (N+blockSize-1)/blockSize;
+    float           init_data[N];
+    CUDA_vec<float> V[3];
+    int             rand_idx;
 
-    prepare_data(V, N);
-    compare_vec_gpu(V.a, V.b, numBlocks, blockSize, N, true);
-    compare_vec_gpu(V.a, V.c, numBlocks, blockSize, N, false);
-    free_vecs(V);
+
+    srand(time(0));
+    for (int i = 0; i < N; i++)
+        init_data[i] = static_cast<float>(rand() % 100);
+    for (int i = 0; i < 3; i++)
+        V[i] = CUDA_vec<float>(N, init_data);
+    rand_idx = rand() % N;
+    V[3].v[rand_idx] = V[1].v[rand_idx];
+    assert(V[1].cmp(V[2], numBlocks, blockSize, N));
+    cout << "test 1 is ok." << endl;
+    assert(!V[1].cmp(V[3], numBlocks, blockSize, N));
+    cout << "test 2 is ok.";
     return 0;
 }
