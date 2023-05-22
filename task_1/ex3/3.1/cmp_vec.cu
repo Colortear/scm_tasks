@@ -1,5 +1,3 @@
-// originates from Ruetsch/Oster: Getting Started with CUDA
-// more C++-style by Haase
 #include <cassert>
 #include <iostream>
 #include <random>
@@ -17,8 +15,6 @@ __global__ void cmp_gpu(bool *ret, float *const a, float *const b, int N)
         if (a[i] != b[i])
             cmp = false;
     sdata[threadIdx.x] = cmp;
-    if (!cmp)
-        printf("yes\n");
     __syncthreads();
     for (unsigned int s = blockDim.x >> 1; s > 0; s >>= 1) {
         if (threadIdx.x <= s && sdata[threadIdx.x] && !sdata[threadIdx.x + s])
@@ -31,14 +27,17 @@ __global__ void cmp_gpu(bool *ret, float *const a, float *const b, int N)
 
 using namespace std;
 
-template <class T>
+template <typename T>
 class CUDA_vec {
 public:
+
+    T   *v;
 
     CUDA_vec() {};
     CUDA_vec(const int N, T *init)
     {
         cudaMallocManaged(&this->v, N * sizeof(T));
+        cout << cudaGetErrorName(cudaGetLastError()) << endl;
         for (int i = 0; i < N; i++)
             this->v[i] = init[i];
     }
@@ -57,8 +56,6 @@ public:
         cudaFree(result);
         return ret;
     }
-
-    T   *v;
 };
 
 int     main(void)
@@ -67,20 +64,19 @@ int     main(void)
     int const       blockSize = 64;
     int const       numBlocks = (N+blockSize-1)/blockSize;
     float           init_data[N];
-    CUDA_vec<float> V[3];
     int             rand_idx;
-
 
     srand(time(0));
     for (int i = 0; i < N; i++)
         init_data[i] = static_cast<float>(rand() % 100);
-    for (int i = 0; i < 3; i++)
-        V[i] = CUDA_vec<float>(N, init_data);
+    auto a = CUDA_vec<float>(N, init_data);
+    auto b = CUDA_vec<float>(N, init_data);
     rand_idx = rand() % N;
-    V[3].v[rand_idx] = V[1].v[rand_idx];
-    assert(V[1].cmp(V[2], numBlocks, blockSize, N));
+    init_data[rand_idx] = init_data[rand_idx]+1;
+    auto c = CUDA_vec<float>(N, init_data);
+    assert(a.cmp(b, numBlocks, blockSize, N));
     cout << "test 1 is ok." << endl;
-    assert(!V[1].cmp(V[3], numBlocks, blockSize, N));
+    assert(!a.cmp(c, numBlocks, blockSize, N));
     cout << "test 2 is ok.";
     return 0;
 }

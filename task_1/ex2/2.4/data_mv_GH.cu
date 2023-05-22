@@ -40,6 +40,8 @@ int main(void)
         c[i] = 100.0f + static_cast<float>(i);
     }
 
+    test<float> t = test<float>(N, c);
+
     inc_gpu<<<numBlocks, blockSize>>>(b, N);
     cout << cudaGetErrorName(cudaGetLastError()) << endl;
 
