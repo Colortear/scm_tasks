@@ -1,3 +1,5 @@
+MAKEFLAGS += --no-print-directory
+
 SUB := $(wildcard */*/.)
 
 all: $(SUB)
