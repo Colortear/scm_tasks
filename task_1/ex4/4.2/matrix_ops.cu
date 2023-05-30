@@ -19,15 +19,15 @@ public:
 
     void    print(std::string label = "") {
         std::cout << label << std::endl;
-        if (storetype == ROW_MAJOR) {
-            for (int i = 0; i < this->m; i++)
+        if (this->storetype == ROW_MAJOR) {
+            for (int i = 0; i < this->len; i++)
                 std::cout << this->v[i] <<  " ";
             std::cout << std::endl;
             return ;
         }
         for (int i = 0; i < this->m; i++) {
             for (int j = 0; j < this->n; j++)
-                std::cout << this->v[IDX2C(i, j, i+1)] << " ";
+                std::cout << this->v[IDX2C(i, j, this->m)] << " ";
             std::cout << std::endl;
         }
         std::cout << std::endl;
@@ -93,9 +93,13 @@ public:
         float   one = 1.f;
         float   zero = 0.f;
 
-        _cublas_wrapper(cublasSgemv(this->c_handle, CUBLAS_OP_N, M.m, M.n,
-                                    &one, M.v, M.m, x.v, 1,
-                                    &zero, r.v, 1));
+        _cublas_wrapper(cublasSgemv(this->c_handle, CUBLAS_OP_N,
+                                    M.m, M.n,
+                                    &one,
+                                    M.v, M.m,
+                                    x.v, 1,
+                                    &zero,
+                                    r.v, 1));
     }
 
     void    Mtx(cuBLAS_Vec &M, cuBLAS_Vec &x, cuBLAS_Vec &r) {
@@ -118,7 +122,7 @@ private:
 int     main(void)
 {
     cublasHandle_t  handle;
-    const int       m = 2;
+    const int       m = 3;
     const int       n = 3;
     float           alpha, beta;
     cuBLAS_Vec      x1(n, 1, COL_MAJOR), x2(n, 1, COL_MAJOR), r(m, 1, COL_MAJOR);
@@ -136,6 +140,8 @@ int     main(void)
     x2.print("x2:");
     A.print("A:");
     c_ops.Mx(A, x1, r);
-    r.print("r:");
+    r.print("A*x1:");
+    c_ops.Mtx(A, x2, r);
+    r.print("A*x2:");
     return 0;
 }
