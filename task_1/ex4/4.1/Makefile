@@ -1,9 +1,10 @@
-NAME := cmp_vec
+NAME := vec_ops
 CC := nvcc
 OFLAGS := -lcublas
-FLAGS :=
-SRC = cmp_vec.cu
+FLAGS := -lcublas
+SRC = vec_ops.cu
 OBJ = $(SRC:.cu=.o)
+DEBUG := -g
 
 %.o: %.cu
 	$(CC) $(OFLAGS) -c $< -o $@
@@ -13,8 +14,9 @@ $(NAME): $(OBJ)
 
 all: $(NAME)
 
-debug: all
-	$(DEBUG)
+debug: OFLAGS += -g
+debug: FLAGS += -g
+debug: $(NAME)
 
 clean:
 	$(RM) -r $(OBJ)
