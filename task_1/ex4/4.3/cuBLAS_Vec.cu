@@ -1,16 +1,20 @@
 #include <iostream>
 #include <ctime>
 #include <cublas_v2.h>
+#include <algorithm>
 #include "cuBLAS_Vec.cuh"
 
-cuBLAS_Vec::cuBLAS_Vec(int m, int n = 1, int st = ROW_MAJOR) :
+cuBLAS_Vec::cuBLAS_Vec(int m, int n = 1, int st = ROW_MAJOR, bool zero_fill = false) :
     len(m*n),
     m(m),
     n(n),
     storetype(st)
 {
     cudaMallocManaged(&this->v, len * sizeof(float));
-    this->rand_fill();
+    if (zero_fill)
+        std::for_each(this->v, this->v + this->len, [=](auto x){ return 0.f; });
+    else
+        this->rand_fill();
 }
 
 cuBLAS_Vec::~cuBLAS_Vec()
@@ -37,6 +41,19 @@ void    cuBLAS_Vec::print(std::string label = "")
 
 void    cuBLAS_Vec::rand_fill()
 {
+    srand(time(0));
     for (int i = 0; i < len; i++)
         this->v[i] = rand() % this->_RAND_MAX;
+}
+
+void    cuBLAS_Vec::tridiag_toe(int c, int d, int e) // assumed COL_MAJOR
+{
+    for (int i = -1; i < this->len; i+=this->m+1) {
+        if (i >= 0)
+            this->v[i] = c;
+        if (i+1<this->len)
+            this->v[i+1] = d;
+        if (i+2<this->len)
+            this->v[i+2] = e;
+    }
 }

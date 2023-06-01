@@ -1,4 +1,4 @@
-NAME := matrix_ops
+NAME := tri_diag
 CC := nvcc
 OFLAGS := -lcublas
 FLAGS := -lcublas

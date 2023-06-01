@@ -12,11 +12,12 @@
 
 class   cuBLAS_Vec {
 public:
-    cuBLAS_Vec(int m, int n, int st);
+    cuBLAS_Vec(int m, int n, int st, bool zero_fill);
     ~cuBLAS_Vec();
 
     void    print(std::string label);
     void    rand_fill();
+    void    tridiag_toe(int c, int d, int e); // generate tridiag Toeplitz matrix from 3 input values
 
     float       *v;
     const int   len, m, n;

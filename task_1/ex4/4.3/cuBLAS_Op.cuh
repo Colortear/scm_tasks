@@ -1,9 +1,6 @@
 #ifndef CUBLAS_OP_CUH
 # define CUBLAS_OP_CUH
 
-# include <iostream>
-# include <ctime>
-# include <cublas_v2.h>
 # include "cuBLAS_Vec.cuh"
 
 class   cuBLAS_Op {
@@ -18,11 +15,15 @@ public:
     float   norm(cuBLAS_Vec &x);
     void    Mx(cuBLAS_Vec &M, cuBLAS_Vec &x, cuBLAS_Vec &r);
     void    Mtx(cuBLAS_Vec &M, cuBLAS_Vec &x, cuBLAS_Vec &r);
+    void    tri_Mx(cuBLAS_Vec &Mm, cuBLAS_Vec &x, const int band);
 
     cublasHandle_t  c_handle;
 
 private:
     void    _cublas_wrapper(cublasStatus_t status);
+
+    static constexpr float  _one = 1.f;
+    static constexpr float  _zero = 0.f;
 };
 
 #endif
