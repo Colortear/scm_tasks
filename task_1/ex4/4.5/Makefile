@@ -1,20 +1,22 @@
-NAME := cmp_vec
+NAME := diagonal
 CC := nvcc
 OFLAGS := -lcublas
-FLAGS :=
-SRC = cmp_vec.cu
+FLAGS := -lcublas
+SRC = main.cu cuBLAS_Vec.cu cuBLAS_Op.cu
 OBJ = $(SRC:.cu=.o)
+DEBUG := -g
 
 %.o: %.cu
-	$(CC) $(OFLAGS) -c $< -o $@
+	$(CC) $(OFLAGS) -I. -c $< -o $@
 
 $(NAME): $(OBJ)
-	$(CC) $(FLAGS) -o $@ $^
+	$(CC) $(FLAGS) -I. -o $@ $^
 
 all: $(NAME)
 
-debug: all
-	$(DEBUG)
+debug: OFLAGS += -g
+debug: FLAGS += -g
+debug: $(NAME)
 
 clean:
 	$(RM) -r $(OBJ)
