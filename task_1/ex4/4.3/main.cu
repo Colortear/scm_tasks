@@ -6,17 +6,21 @@
 int     main(void)
 {
     cublasHandle_t  handle;
-    const int       m = 3;
     const int       n = 3;
-    cuBLAS_Vec      x(n, 1, COL_MAJOR, false);
-    cuBLAS_Vec      T(m, n, MATRIX, true);
+    float           t[2];
+    cuBLAS_Vec      x(n, 1, COL_MAJOR, false), y(n, 1, COL_MAJOR, false);
 
     if (cublasCreate(&handle) != CUBLAS_STATUS_SUCCESS) {
         std::cout << "cuBLAS init failure" << std::endl;
         return EXIT_FAILURE;
     }
     cuBLAS_Op   c_ops(handle);
-    T.tridiag_toe(-1, 2, -1);
+    t[0] = 2;
+    t[1] = -1;
+    cuBLAS_Vec  T(Banded(t, 2), n);
     T.print("T:");
+    x.print("x:");
+    c_ops.tri_Mx(T, x, 1, y);
+    y.print("Tx=");
     return 0;
  }

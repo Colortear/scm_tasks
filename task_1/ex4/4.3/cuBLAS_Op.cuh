@@ -15,7 +15,7 @@ public:
     float   norm(cuBLAS_Vec &x);
     void    Mx(cuBLAS_Vec &M, cuBLAS_Vec &x, cuBLAS_Vec &r);
     void    Mtx(cuBLAS_Vec &M, cuBLAS_Vec &x, cuBLAS_Vec &r);
-    void    tri_Mx(cuBLAS_Vec &Mm, cuBLAS_Vec &x, const int band);
+    void    tri_Mx(cuBLAS_Vec &Mm, cuBLAS_Vec &x, const int band, cuBLAS_Vec &y);
 
     cublasHandle_t  c_handle;
 

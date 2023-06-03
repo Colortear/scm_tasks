@@ -62,10 +62,10 @@ void    cuBLAS_Op::Mtx(cuBLAS_Vec &M, cuBLAS_Vec &x, cuBLAS_Vec &r)
                 &this->_one, M.v, M.m, x.v, 1, &this->_zero, r.v, 1));
 }
 
-void    cuBLAS_Op::tri_Mx(cuBLAS_Vec &M, cuBLAS_Vec &x, const int band)
+void    cuBLAS_Op::tri_Mx(cuBLAS_Vec &M, cuBLAS_Vec &x, const int band, cuBLAS_Vec &y)
 {
-    _cublas_wrapper(cublasStbmv(this->c_handle, CUBLAS_FILL_MODE_FULL,
-                CUBLAS_OP_N, CUBLAS_DIAG_NON_UNIT, M.m, band, M.v, M.m, x.v, 1));
+    _cublas_wrapper(cublasSsbmv(this->c_handle, CUBLAS_FILL_MODE_LOWER,
+                M.n, band, &this->_one, M.v, M.m, x.v, 1, &this->_zero, y.v, 1));
 }
 
 void    cuBLAS_Op::_cublas_wrapper(cublasStatus_t status)
